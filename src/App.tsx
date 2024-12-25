@@ -107,6 +107,7 @@ const App: React.FC = () => {
     <div style={{ padding: "20px" }}>
       <h1>Read VTT File</h1>
       <input type="file" accept=".vtt" onChange={handleFileChange} />
+      <button onClick={() =>generateVTTFile}>Tải file</button>
       <h2>Subtitles:</h2>
       <Table dataSource={data} columns={columns} />;
     </div>
