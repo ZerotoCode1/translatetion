@@ -1,8 +1,9 @@
 import { Table } from "antd";
-import React, { useState } from "react";
-
+import React, { useEffect, useState } from "react";
+import { debounce } from 'lodash';
 const App: React.FC = () => {
   const [subtitles, setSubtitles] = useState<any>([]);
+  const [dataTranslate, setDataTranslate] = useState<any>();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -22,27 +23,27 @@ const App: React.FC = () => {
       }
       setSubtitles(listConet);
     };
-    
+
     reader.onerror = () => {
       alert("Error reading file.");
     };
 
     reader.readAsText(file);
   };
-  console.log(subtitles,'rưerwerwerwerwerwe')
   const handleCallApiTranslate = async () => {
-    const totalNodeText = 20;
-    const totalCallAPi =  Math.round(subtitles?.length / totalNodeText)
+    const totalNodeText = 10;
+    const totalCallAPi = Math.round(subtitles?.length / totalNodeText)
     for (let i = 0; i < totalCallAPi + 1; i++) {
-      console.log('callAPi', subtitles.texts.slice(i * totalNodeText, (i + 1) * totalNodeText))
-      subtitles.texts.slice(i * totalNodeText, (i + 1) * totalNodeText)
+      console.log('callAPi', subtitles?.slice(i * totalNodeText, (i + 1) * totalNodeText))
+      subtitles?.slice(i * totalNodeText, (i + 1) * totalNodeText)
     }
+    setDataTranslate('')
   }
   const generateVTTFile = (newSubtitles: string[]) => {
     let vttContent = "WebVTT\n\n";
 
     for (let i = 0; i < newSubtitles.length; i++) {
-      const timestamp = subtitles.timestamps[i]; // Giữ lại timestamp cũ
+      const timestamp = subtitles.timestamps[i]; 
       const content = tranlate[i];
 
       vttContent += `${i + 1}\n${timestamp}\n${content}\n\n`;
@@ -57,57 +58,94 @@ const App: React.FC = () => {
     link.download = "tranlatetoVi.vtt";
     link.click();
 
-    // Thực hiện giải phóng Blob sau khi tải
     URL.revokeObjectURL(url);
   }
-  handleCallApiTranslate()
   // generateVTTFile(subtitles.timestamps)
+  useEffect(() => {
+    if (subtitles) {
+      handleCallApiTranslate()
+    }
+  }, [subtitles]);
+   const handleInput = debounce((record: any, value: string) => {
+       const body = [
+      {
+        [`${record?.startTime} --> ${record?.endTime}`]: value 
+      }
+    ];
 
+    try {
+        console.log(body, 'body')
+    } catch (error) {
+      console.log(error)
+    }
+  }, 1000); 
   const data = fakeData.map((item, index) => {
     const firstKey = Object.keys(item)[0];
     const timeSub = firstKey.split('-->')
     return {
-      key: index,
+      key: index + 1,
       startTime: timeSub[0].trim(),
       endTime: timeSub[1],
       orignalText: item[firstKey as keyof typeof item],
       translatedText: item?.translation
     }
   })
-  console.log(data,'fsgjhfsdghfjs')
   const columns = [
-  {
-    title: 'STT',
-    dataIndex: 'index',
-    key: 'index',
-    render: (_text:any, _record:any, index:number) => index + 1, 
+    {
+      title: 'STT',
+      dataIndex: 'key',
+      key: 'index',
     },
-  {
-    title: 'Start Time',
-    dataIndex: 'startTime',
-    key: 'startTime',
+    {
+      title: 'Start Time',
+      dataIndex: 'startTime',
+      key: 'startTime',
     },
-  {
-    title: 'End Time',
-    dataIndex: 'endTime',
-    key: 'endTime',
-  },
-  {
-    title: 'Orignal Text',
-    dataIndex: 'orignalText',
-    key: 'orignalText',
-  },
-  {
-    title: 'Translated Text',
-    dataIndex: 'translatedText',
-    key: 'orignalText',
-  },
-];
+    {
+      title: 'End Time',
+      dataIndex: 'endTime',
+      key: 'endTime',
+    },
+    {
+      title: 'Orignal Text',
+      dataIndex: 'orignalText',
+      key: 'orignalText',
+      render: (_text: any, record: any) => {
+        console.log(record, _text, 'record')
+        return (
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            style={{
+              width: '400px',
+              whiteSpace: 'normal',
+              wordWrap: 'break-word',
+              outline: 'none',
+            }}
+            onInput={(e) => {
+              const target = e.target as HTMLDivElement;
+              handleInput(record, target?.innerText)
+            }}
+          >
+            {record?.orignalText}
+          </div>
+        )
+      },
+      width: '400px'
+    },
+    {
+      title: 'Translated Text',
+      dataIndex: 'translatedText',
+      key: 'orignalText',
+    },
+  ];
   return (
     <div style={{ padding: "20px" }}>
       <h1>Read VTT File</h1>
       <input type="file" accept=".vtt" onChange={handleFileChange} />
-      <button onClick={() =>generateVTTFile}>Tải file</button>
+      {
+        dataTranslate && <button onClick={() => generateVTTFile} className="button-18">Tải file</button>
+      }
       <h2>Subtitles:</h2>
       <Table dataSource={data} columns={columns} />;
     </div>
@@ -457,87 +495,87 @@ const tranlate =
     "câu trả lời mẫu từ những người dự thi IELTS trên toàn thế giới, vì vậy hãy tham khảo nhé.",
     "Vậy nên tôi sẽ gặp lại các bạn vào lần tới với nhiều mẹo hữu ích và chủ đề thú vị hơn. Tạm biệt nhé."
   ]
-  
+
 
 const fakeData = [
-    {
-        "00:06:34.020 --> 00:06:39.420": "With a degree in hospitality management, I do actually believe I'd be genuinely well-suited",
-        "translation": "Với một bằng cấp về quản lý khách sạn, tôi thực sự tin rằng mình sẽ phù hợp rất tốt"
-    },
-    {
-        "00:06:39.420 --> 00:06:44.940": "to running a luxury dining establishment or even perhaps a well-designed chic cafe.\"",
-        "translation": "để điều hành một cơ sở ăn uống sang trọng hoặc thậm chí có thể là một quán cafe thiết kế đẹp và sành điệu."
-    },
-    {
-        "00:06:46.140 --> 00:06:52.800": "And here, the candidate now expands on memories from their childhood and links that to the",
-        "translation": "Và ở đây, ứng viên mở rộng về những kỷ niệm thời thơ ấu và liên kết chúng với"
-    },
-    {
-        "00:06:52.800 --> 00:06:59.880": "present day. They also mentioned their university education and tie that aspect into it, with it",
-        "translation": "thời điểm hiện tại. Họ cũng đề cập đến nền tảng giáo dục đại học và kết nối yếu tố đó vào, với"
-    },
-    {
-        "00:06:59.880 --> 00:07:05.040": "being a more appropriate career choice when they talk about that hospitality management degree. And",
-        "translation": "việc này là một sự lựa chọn nghề nghiệp phù hợp hơn khi họ nói về bằng cấp quản lý khách sạn đó. Và"
-    },
-    {
-        "00:07:05.040 --> 00:07:10.380": "as a result they use much better lexical resource and end up using more complex sentence structures,",
-        "translation": "do đó họ sử dụng tài nguyên từ vựng tốt hơn rất nhiều và kết thúc bằng việc sử dụng các cấu trúc câu phức tạp hơn,"
-    },
-    {
-        "00:07:10.380 --> 00:07:18.420": "meaning this mark is - this, this response, rather - is a winner and they get a higher mark.",
-        "translation": "có nghĩa là điểm số này - câu trả lời này, thay vì thế - là một câu trả lời chiến thắng và họ nhận được điểm số cao hơn."
-    },
-    {
-        "00:07:21.480 --> 00:07:24.240": "The next question is \"What do you like about your job?\"",
-        "translation": "Câu hỏi tiếp theo là \"Bạn thích gì về công việc của mình?\""
-    },
-    {
-        "00:07:24.240 --> 00:07:30.180": "Now with this one most candidates would have a tendency to reel off the list of things they like",
-        "translation": "Với câu hỏi này, hầu hết ứng viên sẽ có xu hướng liệt kê một loạt những điều họ thích"
-    },
-    {
-        "00:07:30.180 --> 00:07:37.380": "about their job or say something very generic, so it might sound like this. \"Well, my favourite",
-        "translation": "về công việc của họ hoặc nói điều gì đó rất chung chung, vì vậy có thể nghe như thế này. \"Chà, điều tôi yêu thích nhất"
-    },
-    {
-        "00:07:37.380 --> 00:07:43.680": "thing about my job is the people. I have a lot of friends at work who help me gain new knowledge.",
-        "translation": "về công việc của tôi là những người đồng nghiệp. Tôi có rất nhiều bạn bè tại nơi làm việc giúp tôi tiếp thu kiến thức mới."
-    },
-    {
-        "00:07:43.680 --> 00:07:48.660": "I also like receiving the salary at the end of the month and then I can spend it on things I like.\"",
-        "translation": "Tôi cũng thích nhận lương vào cuối tháng và sau đó tôi có thể chi tiêu vào những thứ tôi thích."
-    },
-    {
-        "00:07:49.320 --> 00:07:55.680": "Now, his response does need spicing up in order to push it from perhaps",
-        "translation": "Giờ đây, câu trả lời của anh ấy cần được làm mới để có thể nâng cấp nó từ một câu trả lời có thể là"
-    },
-    {
-        "00:07:55.680 --> 00:08:01.260": "a band six to a band nine. It needs better vocabulary, better grammatical structures,",
-        "translation": "mức độ band sáu lên band chín. Nó cần từ vựng tốt hơn, cấu trúc ngữ pháp tốt hơn,"
-    },
-    {
-        "00:08:01.260 --> 00:08:07.800": "more all-round development, and you need to make it far less generic. Make it unique to you.",
-        "translation": "phát triển toàn diện hơn, và bạn cần làm cho nó ít chung chung hơn. Hãy làm cho nó trở nên đặc biệt với bạn."
-    },
-    {
-        "00:08:07.800 --> 00:08:13.140": "Think about what makes your job worthwhile. Why do you get out of bed in the morning?",
-        "translation": "Hãy suy nghĩ về những điều làm cho công việc của bạn đáng giá. Tại sao bạn lại dậy khỏi giường vào mỗi buổi sáng?"
-    },
-    {
-        "00:08:13.680 --> 00:08:19.380": "Why is it important to you that you go to work? What things do you actually",
-        "translation": "Tại sao công việc lại quan trọng đối với bạn? Những điều gì bạn thực sự"
-    },
-    {
-        "00:08:19.380 --> 00:08:24.780": "like about your job that others don't? Try not to mention salary and things like that.",
-        "translation": "thích về công việc của bạn mà người khác không thích? Cố gắng đừng đề cập đến lương thưởng và những thứ tương tự."
-    },
-    {
-        "00:08:26.400 --> 00:08:34.320": "And a better response may be \"Well, being an educational consultant, that's quite an easy",
-        "translation": "Một câu trả lời tốt hơn có thể là \"Chà, là một tư vấn viên giáo dục, đó thực sự là một công việc dễ dàng"
-    },
-    {
-        "00:08:34.320 --> 00:08:38.160": "answer actually. My favourite aspect about this job is that I get to help",
-        "translation": "trả lời thực sự. Khía cạnh yêu thích nhất về công việc này là tôi có thể giúp đỡ"
-    }
+  {
+    "00:06:34.020 --> 00:06:39.420": "With a degree in hospitality management, I do actually believe I'd be genuinely well-suited",
+    "translation": "Với một bằng cấp về quản lý khách sạn, tôi thực sự tin rằng mình sẽ phù hợp rất tốt"
+  },
+  {
+    "00:06:39.420 --> 00:06:44.940": "to running a luxury dining establishment or even perhaps a well-designed chic cafe.\"",
+    "translation": "để điều hành một cơ sở ăn uống sang trọng hoặc thậm chí có thể là một quán cafe thiết kế đẹp và sành điệu."
+  },
+  {
+    "00:06:46.140 --> 00:06:52.800": "And here, the candidate now expands on memories from their childhood and links that to the",
+    "translation": "Và ở đây, ứng viên mở rộng về những kỷ niệm thời thơ ấu và liên kết chúng với"
+  },
+  {
+    "00:06:52.800 --> 00:06:59.880": "present day. They also mentioned their university education and tie that aspect into it, with it",
+    "translation": "thời điểm hiện tại. Họ cũng đề cập đến nền tảng giáo dục đại học và kết nối yếu tố đó vào, với"
+  },
+  {
+    "00:06:59.880 --> 00:07:05.040": "being a more appropriate career choice when they talk about that hospitality management degree. And",
+    "translation": "việc này là một sự lựa chọn nghề nghiệp phù hợp hơn khi họ nói về bằng cấp quản lý khách sạn đó. Và"
+  },
+  {
+    "00:07:05.040 --> 00:07:10.380": "as a result they use much better lexical resource and end up using more complex sentence structures,",
+    "translation": "do đó họ sử dụng tài nguyên từ vựng tốt hơn rất nhiều và kết thúc bằng việc sử dụng các cấu trúc câu phức tạp hơn,"
+  },
+  {
+    "00:07:10.380 --> 00:07:18.420": "meaning this mark is - this, this response, rather - is a winner and they get a higher mark.",
+    "translation": "có nghĩa là điểm số này - câu trả lời này, thay vì thế - là một câu trả lời chiến thắng và họ nhận được điểm số cao hơn."
+  },
+  {
+    "00:07:21.480 --> 00:07:24.240": "The next question is \"What do you like about your job?\"",
+    "translation": "Câu hỏi tiếp theo là \"Bạn thích gì về công việc của mình?\""
+  },
+  {
+    "00:07:24.240 --> 00:07:30.180": "Now with this one most candidates would have a tendency to reel off the list of things they like",
+    "translation": "Với câu hỏi này, hầu hết ứng viên sẽ có xu hướng liệt kê một loạt những điều họ thích"
+  },
+  {
+    "00:07:30.180 --> 00:07:37.380": "about their job or say something very generic, so it might sound like this. \"Well, my favourite",
+    "translation": "về công việc của họ hoặc nói điều gì đó rất chung chung, vì vậy có thể nghe như thế này. \"Chà, điều tôi yêu thích nhất"
+  },
+  {
+    "00:07:37.380 --> 00:07:43.680": "thing about my job is the people. I have a lot of friends at work who help me gain new knowledge.",
+    "translation": "về công việc của tôi là những người đồng nghiệp. Tôi có rất nhiều bạn bè tại nơi làm việc giúp tôi tiếp thu kiến thức mới."
+  },
+  {
+    "00:07:43.680 --> 00:07:48.660": "I also like receiving the salary at the end of the month and then I can spend it on things I like.\"",
+    "translation": "Tôi cũng thích nhận lương vào cuối tháng và sau đó tôi có thể chi tiêu vào những thứ tôi thích."
+  },
+  {
+    "00:07:49.320 --> 00:07:55.680": "Now, his response does need spicing up in order to push it from perhaps",
+    "translation": "Giờ đây, câu trả lời của anh ấy cần được làm mới để có thể nâng cấp nó từ một câu trả lời có thể là"
+  },
+  {
+    "00:07:55.680 --> 00:08:01.260": "a band six to a band nine. It needs better vocabulary, better grammatical structures,",
+    "translation": "mức độ band sáu lên band chín. Nó cần từ vựng tốt hơn, cấu trúc ngữ pháp tốt hơn,"
+  },
+  {
+    "00:08:01.260 --> 00:08:07.800": "more all-round development, and you need to make it far less generic. Make it unique to you.",
+    "translation": "phát triển toàn diện hơn, và bạn cần làm cho nó ít chung chung hơn. Hãy làm cho nó trở nên đặc biệt với bạn."
+  },
+  {
+    "00:08:07.800 --> 00:08:13.140": "Think about what makes your job worthwhile. Why do you get out of bed in the morning?",
+    "translation": "Hãy suy nghĩ về những điều làm cho công việc của bạn đáng giá. Tại sao bạn lại dậy khỏi giường vào mỗi buổi sáng?"
+  },
+  {
+    "00:08:13.680 --> 00:08:19.380": "Why is it important to you that you go to work? What things do you actually",
+    "translation": "Tại sao công việc lại quan trọng đối với bạn? Những điều gì bạn thực sự"
+  },
+  {
+    "00:08:19.380 --> 00:08:24.780": "like about your job that others don't? Try not to mention salary and things like that.",
+    "translation": "thích về công việc của bạn mà người khác không thích? Cố gắng đừng đề cập đến lương thưởng và những thứ tương tự."
+  },
+  {
+    "00:08:26.400 --> 00:08:34.320": "And a better response may be \"Well, being an educational consultant, that's quite an easy",
+    "translation": "Một câu trả lời tốt hơn có thể là \"Chà, là một tư vấn viên giáo dục, đó thực sự là một công việc dễ dàng"
+  },
+  {
+    "00:08:34.320 --> 00:08:38.160": "answer actually. My favourite aspect about this job is that I get to help",
+    "translation": "trả lời thực sự. Khía cạnh yêu thích nhất về công việc này là tôi có thể giúp đỡ"
+  }
 ]
