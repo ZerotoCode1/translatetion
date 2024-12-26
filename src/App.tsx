@@ -37,11 +37,11 @@ const App: React.FC = () => {
   console.log(subtitles, 'subtitles')
   const handleCallApiTranslate = async () => {
     const totalNodeText = 10;
-    const totalCallAPi = Math.round(subtitles?.length / totalNodeText);
+    const totalCallAPi = Math.ceil(subtitles?.length / totalNodeText);
     const apiCalls = [];
 
     // Tạo các API calls song song
-    for (let i = 0; i < totalCallAPi; i++) {
+    for (let i = 0; i < totalCallAPi ; i++) {
       const body = subtitles?.slice(i * totalNodeText, (i + 1) * totalNodeText);
 
       const apiCall = axios.post('https://test-toeic.online:1443/api/translation-file-vtt', {
