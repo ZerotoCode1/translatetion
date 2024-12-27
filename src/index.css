@@ -150,3 +150,7 @@ input[type="file"]::file-selector-button:active {
   background-color: transparent !important;
   box-shadow: none !important;
 }
+.ant-modal-content {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
