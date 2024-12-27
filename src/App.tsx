@@ -9,6 +9,7 @@ const App: React.FC = () => {
   const [dataTranslate, setDataTranslate] = useState<any>();
   const [pageSize, setPageSize] = useState({ page: 1, size: 10 });
   const [loading, setLoading] = useState(false);
+  const [indexTitle, setIndexTitle] = useState(false);
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
@@ -24,7 +25,12 @@ const App: React.FC = () => {
 
       const listConet = []
       const text = []
-      const check = /^\d+$/.test(lines[0]) ? 3: 2;
+      const check = /^\d+$/.test(lines[0]) ? 3 : 2;
+      if (/^\d+$/.test(lines[0])) {
+        setIndexTitle(true)
+      } else {
+        setIndexTitle(false)
+      }
       for (let i = 0; i < lines.length; i += check) {
         if (/^\d+$/.test(lines[0])) {
           listConet.push({ [lines[i + 1]]: lines[i + 2] })
@@ -103,11 +109,22 @@ const App: React.FC = () => {
     }
 
   };
+  console.log(indexTitle, 'indexTitle')
   const generateVTTFile = () => {
     let vttContent = "WebVTT\n\n";
 
+    const checkIndex = (item: any, index: any) => {
+      if (indexTitle) {
+        return `${index + 1}\n${item?.startTime + ` --> ` + item?.endTime}\n${item?.translatedText}\n\n`
+      } else {
+        return `${item?.startTime + ` --> ` + item?.endTime}\n${item?.translatedText}\n\n`
+
+      }
+    }
+
     dataTranslate?.map((item: any, index: number) => {
-      vttContent += `${index + 1}\n${item?.startTime + `-->` + item?.endTime}\n${item?.translatedText}\n\n`;
+      // vttContent += `${index + 1}\n${item?.startTime + `-->` + item?.endTime}\n${item?.translatedText}\n\n`;
+      vttContent += checkIndex(item, index)
     })
     console.log(vttContent, '=======>')
     const blob = new Blob([vttContent], { type: "text/vtt" });
@@ -348,6 +365,7 @@ const App: React.FC = () => {
     };
     reCallApiTranslate()
   }
+  console.log(subtitles, 'dataTranslate')
   return (
     <div style={{ padding: "20px" }}>
       <h1 className="text-[30px] font-semibold mb-4">Chọn file sub muốn dịch</h1>
