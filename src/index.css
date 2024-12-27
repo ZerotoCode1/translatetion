@@ -1,3 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -142,4 +145,8 @@ input[type="file"]::file-selector-button:hover {
 /* file upload button active state */
 input[type="file"]::file-selector-button:active {
   background-color: #e5e7eb;
+}
+:where(.css-dev-only-do-not-override-77tu7h).ant-modal .ant-modal-content{
+  background-color: transparent;
+  box-shadow: none;
 }

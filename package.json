@@ -13,6 +13,7 @@
     "@google-cloud/translate": "^8.5.0",
     "antd": "^5.22.6",
     "axios": "^1.7.9",
+    "franc": "^6.2.0",
     "lodash": "^4.17.21",
     "openai": "^4.77.0",
     "react": "^18.3.1",
