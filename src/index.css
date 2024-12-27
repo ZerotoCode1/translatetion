@@ -147,6 +147,6 @@ input[type="file"]::file-selector-button:active {
   background-color: #e5e7eb;
 }
 :where(.css-dev-only-do-not-override-77tu7h).ant-modal .ant-modal-content{
-  background-color: transparent;
-  box-shadow: none;
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
